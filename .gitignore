@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual Environment
+venv/
+.env
+
+# IDE (สำหรับ IntelliJ/JetBrains)
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Alembic Migrations Cache
+migrations/__pycache__/
+
+# PyCharm project files
+*.iml
+
+# System files
+.DS_Store
+Thumbs.db
