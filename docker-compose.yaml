@@ -1,0 +1,36 @@
+services:
+  fx_ml_server:
+    build: .
+    container_name: fx_ml_server
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_APP=server.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    restart: always
+    depends_on:
+      - fx_ml_db
+    networks:
+        - fx_ml_network
+  fx_ml_db:
+    image: postgres
+    container_name: fx_ml_db
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    restart: always
+    networks:
+        - fx_ml_network
+networks:
+    fx_ml_network:
+        driver: bridge

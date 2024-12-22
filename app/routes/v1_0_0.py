@@ -104,7 +104,18 @@ def add_data():
 
         # check required parameters
         if not all([symbol, datetime_str, timeframe, open_price, close_price, high_price, low_price, volume]):
+            print('Missing required parameters')
             return jsonify({'message': 'Missing required parameters'}), 400
+
+        if timeframe not in ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1']:
+            return jsonify({'message': 'Invalid timeframe'}), 400
+
+        # convert datetime to format (YYYY.MM.DD HH:MM to YYYY-MM-DD HH:MM:SS)
+        datetime_str = datetime_str.replace('.', '-')
+        if len(datetime_str.split(' ')[1]) == 4:
+            datetime_str = datetime_str[:11] + '0' + datetime_str[11:]
+
+        print("datetime_str :", datetime_str)
 
         # convert datetime
         from datetime import datetime

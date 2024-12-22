@@ -37,6 +37,12 @@ def create_app():
     # Import models
     from app.models import forex_data
 
+    # migrate init db
+    # @app.before_request()
+    # def create_tables():
+    #     print("Creating tables...")
+        # db.create_all()
+
     # Register blueprints
     @app.route('/')
     def index():

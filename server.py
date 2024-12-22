@@ -11,5 +11,6 @@ if __name__ == '__main__':
         methods = ', '.join(sorted(rule.methods))
         route_list.append([rule.rule, methods, rule.endpoint])
     print('App version: v1.0.0')
+
     print(tabulate(route_list, headers=["Route", "Methods", "Endpoint"], tablefmt="grid"))
     app.run(debug=app.config['DEBUG'], host='0.0.0.0', port=app.config['PORT'])
