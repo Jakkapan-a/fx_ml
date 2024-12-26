@@ -34,11 +34,14 @@ def predict(symbol, timeframe):
             }
         ] for d in data)
 
-        # Do something with the data
-
+        # Calculate price difference
         df['price_diff'] = df['close_price'].diff().diffna(0)
         X = np.arange(len(df)).reshape(-1, 1)
         y = df['close_price'].values
+
+        print("X :", X)
+        print("y :", y)
+
 
         # Extract data train and test
         train_size = int(len(X) * 0.8)
@@ -68,6 +71,7 @@ def predict(symbol, timeframe):
         })
 
     except Exception as e:
+        current_app.logger.error(str(e))
         return jsonify({'message': str(e)}), 400
 
 @v1_0_0_bp.route('/data/<string:symbol>/<string:timeframe>')
