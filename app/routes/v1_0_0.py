@@ -21,8 +21,9 @@ def predict(symbol, timeframe):
     :return:
     """
     try:
-        data = ForexData.query.filter_by(symbol=symbol, timeframe=timeframe).order_by(ForexData.datetime.desc()).limit(1000).all()
-
+        # URL = /api/v1.0.0/predict/EURUSD/M1?limit=1000
+        limit = request.args.get('limit', 1000) # default 1000
+        data = ForexData.query.filter_by(symbol=symbol, timeframe=timeframe).order_by(ForexData.datetime.desc()).limit(limit).all()
         if not data:
             return jsonify({'message': 'Data not found!'}) , 404
 

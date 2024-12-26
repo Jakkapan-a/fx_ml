@@ -2,6 +2,7 @@ services:
   fx_ml_server:
     build: .
     container_name: fx_ml_server
+    working_dir: /app
     ports:
       - "5000:5000"
     env_file:
@@ -17,6 +18,8 @@ services:
       - fx_ml_db
     networks:
         - fx_ml_network
+
+
   fx_ml_db:
     image: postgres
     container_name: fx_ml_db

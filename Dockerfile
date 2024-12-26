@@ -8,11 +8,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Migration
-#RUN falsk db init
-#RUN flask db migrate -m "Initial migration."
-#RUN flask db upgrade
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 5000
-
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["python", "server.py"]
