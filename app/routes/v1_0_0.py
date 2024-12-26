@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, Response
 
 from app import db
 from app.models.forex_data import ForexData
 import xgboost as xgb
+import sklearn
 
 v1_0_0_bp = Blueprint('/', __name__)
 
@@ -12,67 +13,64 @@ v1_0_0_bp = Blueprint('/', __name__)
 def index():
     return jsonify({'message': 'Welcome to the API!'})
 
-
 @v1_0_0_bp.route('/predict/<string:symbol>/<string:timeframe>')
 def predict(symbol, timeframe):
     """
-    :param symbol:
-    :param timeframe:
-    :return:
+    Predict next price based on historical data.
     """
     try:
         # URL = /api/v1.0.0/predict/EURUSD/M1?limit=1000
-        limit = request.args.get('limit', 1000) # default 1000
+        limit = int(request.args.get('limit', 1000))  # default limit = 1000
         data = ForexData.query.filter_by(symbol=symbol, timeframe=timeframe).order_by(ForexData.datetime.desc()).limit(limit).all()
-        if not data:
-            return jsonify({'message': 'Data not found!'}) , 404
 
-        df = pd.DataFrame([
-            {
-                'datetime': d.datetime,
-                'close_price': d.close_price
-            }
-        ] for d in data)
+        if not data:
+            return jsonify({'message': 'Data not found!'}), 404
+
+        # Create DataFrame
+        df = pd.DataFrame([{'datetime': d.datetime, 'close_price': d.close_price} for d in data])
+
+        # Reverse DataFrame to chronological order
+        df = df.iloc[::-1].reset_index(drop=True)
 
         # Calculate price difference
-        df['price_diff'] = df['close_price'].diff().diffna(0)
+        df['price_diff'] = df['close_price'].diff().fillna(0)
         X = np.arange(len(df)).reshape(-1, 1)
         y = df['close_price'].values
 
-        print("X :", X)
-        print("y :", y)
-
-
-        # Extract data train and test
+        # Extract data for training and testing
         train_size = int(len(X) * 0.8)
         X_train, y_train = X[:train_size], y[:train_size]
         X_test, y_test = X[train_size:], y[train_size:]
 
-        # Train model
-        model = xgb.XGBRegressor(ojective='reg:squarederror', n_estimators=100)
+        # Train XGBoost model
+        model = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100)
         model.fit(X_train, y_train)
 
         # Predict next price
-        future_price = model.predict([len(X)])[0]
+        future_price = model.predict(np.array([[len(X)]]))[0]
 
-        # Get trend and percent change
+        # Calculate trend and percent change
         last_close_price = y[-1]
         trend = "up" if future_price > last_close_price else "down"
         percent_change = ((future_price - last_close_price) / last_close_price) * 100
 
+        print(f"Symbol: {symbol}, Timeframe: {timeframe}, Future Price: {future_price}, Last Close Price: {last_close_price}, Trend: {trend}, Percent Change: {percent_change}")
+
+        # Return prediction results
         return jsonify({
             "symbol": symbol,
             "timeframe": timeframe,
-            "predicted_price": round(future_price, 2),
-            "last_close_price": round(last_close_price, 2),
+            "predicted_price": round(float(future_price), 2),
+            "last_close_price": round(float(last_close_price), 2),
             "trend": trend,
-            "percent_change": round(percent_change, 2),
+            "percent_change": round(float(percent_change), 2),
             "date": pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
         })
 
     except Exception as e:
         current_app.logger.error(str(e))
         return jsonify({'message': str(e)}), 400
+
 
 @v1_0_0_bp.route('/data/<string:symbol>/<string:timeframe>')
 def get_data(symbol, timeframe):
