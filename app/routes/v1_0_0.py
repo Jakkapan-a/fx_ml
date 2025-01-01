@@ -124,6 +124,12 @@ def add_data():
         from datetime import datetime
         datetime_obj = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
 
+
+        # check if data already exists
+        data = ForexData.query.filter_by(symbol=symbol, datetime=datetime_obj, timeframe=timeframe).first()
+        if data:
+            return jsonify({'message': 'Data already exists!'}), 400
+
         # convert float/int
         open_price = float(open_price)
         close_price = float(close_price)
